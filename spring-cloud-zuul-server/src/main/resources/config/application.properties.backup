@@ -1,0 +1,56 @@
+server.port=8041
+
+spring.application.name=spring-cloud-zuul-server
+
+# 传统的路由配置
+zuul.routes.traditional-router.path=/tr-router/**
+zuul.routes.traditional-router.url=http://localhost:8011
+
+# 本地跳转
+zuul.routes.second.path = /health/**
+zuul.routes.second.url = forward:/actuator/health
+
+# 面向服务的路由配置
+zuul.routes.orient-service-router.path=/os-router/**
+zuul.routes.orient-service-router.service-id=spring-cloud-zuul-client
+
+# 传统的路由配置（不依赖于eureka等服务发现框架来获取多实例url列表）
+#ribbon.eureka.enable=false
+#zuul.routes.multiple-instances-router.path=/mi-router/**
+#zuul.routes.multiple-instances-router.service-id=aaa-service
+#aaa-service.ribbon.listOfServers=http://localhost:8011
+
+# 配置eureka注册中心
+eureka.client.service-url.defaultZone=http://localhost:8001/eureka
+eureka.client.register-with-eureka=true
+eureka.client.fetch-registry=true
+
+# 不使用服务路由的默认配置
+#zuul.ignored-services=*
+zuul.ignore-local-service=false
+
+# 设置zuul server过滤掉的敏感头信息（默认过滤Cookie,Set-Cookie,Authorization写为空表示不过滤）
+zuul.sensitive-headers=
+
+# 配置监控中心暴露接口
+management.endpoints.web.exposure.include=Routes, Filters, health
+
+# zuul网关连接超时时间（只适用于传统路由）
+zuul.host.connect-timeout-millis=3000
+# zuul网关套接字超时时间（只适用于传统路由）
+zuul.host.socket-timeout-millis=15000
+
+# ribbon请求转发超时
+ribbon.ReadTimeout=15000
+# ribbon创建请求连接的超时
+ribbon.ConnectTimeout=3000
+
+# 设置当前实例的最大连接重试次数
+ribbon.MaxAutoRetries=0
+# 设置切换实例的最大连接重试次数
+ribbon.MaxAutoRetriesNextServer=0
+
+# hystrix超时时间设置
+# 推荐值 hystrixTimeout = (ribbonReadTimeout + ribbonConnectTimeout) * (maxAutoRetries + 1) * (maxAutoRetriesNextServer + 1);
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=15000
+
