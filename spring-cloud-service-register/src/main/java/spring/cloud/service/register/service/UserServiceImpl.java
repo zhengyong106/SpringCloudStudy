@@ -19,11 +19,23 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public List<User> getUsers() {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         return users;
     }
 
     @Override
     public User getUser(String userId) {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         for(User user: users){
             if(user.getUserId().equals(userId)){
                 return user;
