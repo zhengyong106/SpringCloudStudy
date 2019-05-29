@@ -1,16 +1,17 @@
-package spring.cloud.service.degradation.hystrix.hystrix;
+package spring.cloud.service.consume.hystrix.hystrix;
 
 import com.netflix.hystrix.*;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategyDefault;
 import org.springframework.web.client.RestTemplate;
-import spring.cloud.service.degradation.hystrix.entity.User;
+import spring.cloud.service.consume.hystrix.entity.User;
 
 public class UserCacheCommand extends HystrixCommand<User> {
     private RestTemplate restTemplate;
     private String userId;
 
     public UserCacheCommand(RestTemplate restTemplate, String userId){
-        super(HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("UserCommandGroup"))
+        super(HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("UserCacheCommandGroup"))
+                .andCommandKey(HystrixCommandKey.Factory.asKey("UserCacheCommand"))
                 .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
                         .withExecutionTimeoutInMilliseconds(5000)));
         this.restTemplate = restTemplate;
@@ -22,7 +23,7 @@ public class UserCacheCommand extends HystrixCommand<User> {
      */
     @Override
     protected User run() {
-        return restTemplate.getForEntity("http://spring-cloud-service-register/getUser?userId={UserId}", User.class, this.userId).getBody();
+        return restTemplate.getForEntity("http://spring-cloud-service-register/getUser/{UserId}", User.class, this.userId).getBody();
     }
 
     /**
@@ -47,8 +48,8 @@ public class UserCacheCommand extends HystrixCommand<User> {
     /**
      *  刷新缓存
      */
-    public static void flushRequestCache(String commandKey, String cacheKey){
-        HystrixRequestCache.getInstance(HystrixCommandKey.Factory.asKey(commandKey), HystrixConcurrencyStrategyDefault.getInstance())
+    public static void flushRequestCache(String cacheKey){
+        HystrixRequestCache.getInstance(HystrixCommandKey.Factory.asKey("UserCacheCommand"), HystrixConcurrencyStrategyDefault.getInstance())
                 .clear(String.valueOf(cacheKey));
     }
 }

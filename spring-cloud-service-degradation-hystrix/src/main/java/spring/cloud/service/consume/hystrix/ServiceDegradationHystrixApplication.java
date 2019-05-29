@@ -1,4 +1,4 @@
-package spring.cloud.service.degradation.hystrix;
+package spring.cloud.service.consume.hystrix;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.client.SpringCloudApplication;

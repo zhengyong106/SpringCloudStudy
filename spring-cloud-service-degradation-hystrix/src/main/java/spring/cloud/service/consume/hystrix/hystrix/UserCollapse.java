@@ -1,11 +1,11 @@
-package spring.cloud.service.degradation.hystrix.hystrix;
+package spring.cloud.service.consume.hystrix.hystrix;
 
 import com.netflix.hystrix.HystrixCollapser;
 import com.netflix.hystrix.HystrixCollapserKey;
 import com.netflix.hystrix.HystrixCollapserProperties;
 import com.netflix.hystrix.HystrixCommand;
 import org.springframework.web.client.RestTemplate;
-import spring.cloud.service.degradation.hystrix.entity.User;
+import spring.cloud.service.consume.hystrix.entity.User;
 
 import java.util.ArrayList;
 import java.util.Collection;

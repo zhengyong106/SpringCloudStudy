@@ -1,4 +1,4 @@
-package spring.cloud.service.degradation.hystrix.entity;
+package spring.cloud.service.consume.hystrix.entity;
 
 import java.io.Serializable;
 
