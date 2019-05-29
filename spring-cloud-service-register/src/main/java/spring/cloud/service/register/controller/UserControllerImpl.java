@@ -1,26 +1,28 @@
-package spring.cloud.service.consume.ribbon.controller;
+package spring.cloud.service.register.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import spring.cloud.service.consume.ribbon.entity.User;
-import spring.cloud.service.consume.ribbon.service.UserService;
+import spring.cloud.service.register.entity.User;
+import spring.cloud.service.register.service.UserService;
 
 import java.util.List;
 
 @RestController
-public class OrderController {
+public class UserControllerImpl implements UserController{
     @Autowired
-    UserService userService;
+    private UserService userService; //注入发现客户端
 
+    @Override
     @GetMapping("/getUsers")
-    public List<User> getService(){
+    public List<User> getUsers(){
         return userService.getUsers();
     }
 
+    @Override
     @GetMapping("/getUser/{userId}")
-    public User getServiceById(@PathVariable("userId") String userId){
+    public User getUser(@PathVariable("userId") String userId){
         return userService.getUser(userId);
     }
 }

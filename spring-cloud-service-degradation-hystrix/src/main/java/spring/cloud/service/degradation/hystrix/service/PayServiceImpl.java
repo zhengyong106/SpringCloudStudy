@@ -1,8 +1,6 @@
 package spring.cloud.service.degradation.hystrix.service;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCollapser;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import com.netflix.hystrix.contrib.javanica.cache.annotation.CacheRemove;
@@ -14,26 +12,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import rx.Observable;
 import rx.Subscriber;
-import spring.cloud.service.degradation.hystrix.CacheHystrixCommand;
-import spring.cloud.service.degradation.hystrix.PayHystrixCommand;
 import spring.cloud.service.degradation.hystrix.entity.User;
+import spring.cloud.service.degradation.hystrix.hystrix.UserCacheCommand;
+import spring.cloud.service.degradation.hystrix.hystrix.UserCollapse;
+import spring.cloud.service.degradation.hystrix.hystrix.UserCommand;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Future;
 
 @Service
 public class PayServiceImpl implements PayService{
     //注入restTemplate
     @Autowired
-    protected RestTemplate restTemplate;
+    private RestTemplate restTemplate;
 
     @Override
     @HystrixCommand(fallbackMethod = "hystrixFallback", commandProperties = @HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="5000"))
     public List<User> getUsers() {
         // 使用restTemplate调用微服务接口
         ResponseEntity<User[]> responseEntity= restTemplate.getForEntity("http://spring-cloud-service-register/getUsers", User[].class);
-        return Arrays.asList(responseEntity.getBody());
+        return Arrays.asList(Objects.requireNonNull(responseEntity.getBody()));
     }
 
     @Override
@@ -43,7 +44,7 @@ public class PayServiceImpl implements PayService{
             @Override
             public List<User> invoke() {
                 ResponseEntity<User[]> responseEntity= restTemplate.getForEntity("http://spring-cloud-service-register/getUsers", User[].class);
-                return Arrays.asList(responseEntity.getBody());
+                return Arrays.asList(Objects.requireNonNull(responseEntity.getBody()));
             }
         };
     }
@@ -66,10 +67,10 @@ public class PayServiceImpl implements PayService{
 
     @Override
     @CacheResult(cacheKeyMethod = "getCacheKey")
-    @HystrixCommand(fallbackMethod = "hystrixFallback", commandProperties = @HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="5000"), commandKey = "test")
+    @HystrixCommand(fallbackMethod = "hystrixFallback", commandProperties = @HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="5000"), commandKey = "usersCache")
     public List<User> getUsersByCache(String cacheKey) {
         ResponseEntity<User[]> responseEntity= restTemplate.getForEntity("http://spring-cloud-service-register/getUsers", User[].class);
-        return Arrays.asList(responseEntity.getBody());
+        return Arrays.asList(Objects.requireNonNull(responseEntity.getBody()));
     }
 
     /**
@@ -83,13 +84,38 @@ public class PayServiceImpl implements PayService{
 
     /**
      * 使用注解清除缓存
-     * @CacheRemove 必须指定commandKey才能进行清除指定缓存
+     * CacheRemove 必须指定commandKey才能进行清除指定缓存
      */
     @Override
-    @CacheRemove(commandKey = "test")
+    @CacheRemove(commandKey = "usersCache")
     @HystrixCommand
     public void flushCache(String cacheKey){
         System.out.println("请求缓存已清空！");
+    }
+
+    @Override
+    @HystrixCollapser(batchMethod = "batchUserByCollapseAnnotation",collapserProperties = {@HystrixProperty(name = "timerDelayInMilliseconds",value = "100")})
+    public Future<User> getUserByCollapseAnnotation(String userId) {
+        throw new RuntimeException("This method body should not be executed");
+    }
+
+    @HystrixCommand(fallbackMethod = "hystrixFallback", commandProperties = @HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="5000"))
+    public List<User> batchUserByCollapseAnnotation(List<String> userIds) {
+        ResponseEntity<User[]> responseEntity= this.restTemplate.getForEntity("http://spring-cloud-service-register/getUsers", User[].class);
+
+        List<User> users = new ArrayList<>(userIds.size());
+        for(String id: userIds){
+            User user = null;
+            for(User _user: Objects.requireNonNull(responseEntity.getBody())){
+                if(_user.getUserId().equals(id)){
+                    user = _user;
+                    break;
+                }
+            }
+            users.add(user);
+        }
+
+        return users;
     }
 
     public List<User> hystrixFallback(){
@@ -102,57 +128,39 @@ public class PayServiceImpl implements PayService{
         return null;
     }
 
+    public List<User> hystrixFallback(List<String> userIds){
+        System.out.println("System error!");
+        User[] users = new User[userIds.size()];
+        Arrays.fill(users, null);
+        return Arrays.asList(users);
+    }
+
 
 
 
 
     @Override
     public User getUser(String userId) {
-        HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey("");
-        HystrixCommandProperties.Setter commandProperties = HystrixCommandProperties.Setter()
-                .withExecutionTimeoutInMilliseconds(5000);
-
-        com.netflix.hystrix.HystrixCommand.Setter commandSetter = com.netflix.hystrix.HystrixCommand.Setter.withGroupKey(groupKey)
-                .andCommandPropertiesDefaults(commandProperties);
-
-        // 同步请求
-        return new PayHystrixCommand(commandSetter, new RestTemplate(), userId).execute();
+        return new UserCommand(restTemplate, userId).execute();
     }
 
     @Override
     public Future<User> getUserWithAsync(String userId) {
-        HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey("");
-        HystrixCommandProperties.Setter commandProperties = HystrixCommandProperties.Setter()
-                .withExecutionTimeoutInMilliseconds(5000);
-
-        com.netflix.hystrix.HystrixCommand.Setter commandSetter = com.netflix.hystrix.HystrixCommand.Setter.withGroupKey(groupKey)
-                .andCommandPropertiesDefaults(commandProperties);
-        // 异步请求
-        return new PayHystrixCommand(commandSetter, new RestTemplate(), userId).queue();
+        return new UserCommand(restTemplate, userId).queue();
     }
 
     @Override
     public Observable<User> getUserWithReactive(String userId) {
-        HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey("");
-        HystrixCommandProperties.Setter commandProperties = HystrixCommandProperties.Setter()
-                .withExecutionTimeoutInMilliseconds(5000);
-
-        com.netflix.hystrix.HystrixCommand.Setter commandSetter = com.netflix.hystrix.HystrixCommand.Setter.withGroupKey(groupKey)
-                .andCommandPropertiesDefaults(commandProperties);
-        // 异步请求
-        return new PayHystrixCommand(commandSetter, new RestTemplate(), userId).observe();
+        return new UserCommand(restTemplate, userId).observe();
     }
 
     @Override
     public User getUserByCache(String commandKey, String userId) {
-        HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey("");
-        HystrixCommandProperties.Setter commandProperties = HystrixCommandProperties.Setter()
-                .withExecutionTimeoutInMilliseconds(5000);
+        return new UserCacheCommand(restTemplate, userId).execute();
+    }
 
-        com.netflix.hystrix.HystrixCommand.Setter commandSetter = com.netflix.hystrix.HystrixCommand.Setter.withGroupKey(groupKey)
-                .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey))
-                .andCommandPropertiesDefaults(commandProperties);
-
-        return new CacheHystrixCommand(commandSetter, new RestTemplate(), userId).execute();
+    @Override
+    public Future<User> getUserByCollapse(String userId) {
+        return new UserCollapse(restTemplate, userId).queue();
     }
 }

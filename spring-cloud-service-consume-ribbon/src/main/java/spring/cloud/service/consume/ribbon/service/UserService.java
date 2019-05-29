@@ -4,7 +4,7 @@ import spring.cloud.service.consume.ribbon.entity.User;
 
 import java.util.List;
 
-public interface OrderService {
+public interface UserService {
     List<User> getUsers();
     User getUser(String userId);
 }

@@ -1,8 +1,8 @@
-package spring.cloud.service.register.controller;
+package spring.cloud.service.consume.feign.service;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import spring.cloud.service.register.entity.User;
+import spring.cloud.service.consume.feign.entity.User;
 
 import java.util.List;
 
