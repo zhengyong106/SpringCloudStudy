@@ -40,7 +40,7 @@
         <module>../spring-cloud-zuul-server</module>
         <module>../spring-cloud-service-register</module>
         <module>../spring-cloud-service-consume-ribbon</module>
-        <module>../spring-cloud-service-degradation-hystrix</module>
+        <module>../spring-cloud-service-consume-hystrix</module>
         <module>../spring-cloud-hystrix-dashboard</module>
         <module>../spring-cloud-hystrix-turbine</module>
         <module>../spring-cloud-service-consume-feign</module>
