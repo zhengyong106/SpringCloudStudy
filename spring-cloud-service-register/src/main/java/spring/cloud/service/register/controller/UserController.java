@@ -12,4 +12,7 @@ public interface UserController {
 
     @GetMapping("/getUser/{userId}")
     User getUser(@PathVariable("userId") String userId);
+
+    @GetMapping("/retry")
+    String retry();
 }

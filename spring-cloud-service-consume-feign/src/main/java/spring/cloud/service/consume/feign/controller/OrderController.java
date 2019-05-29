@@ -23,4 +23,10 @@ public class OrderController {
     public User getUser(@PathVariable("userId") String userId){
         return userControllerFeign.getUser(userId);
     }
+
+    @GetMapping("/retry")
+    public String feignRetry(){
+        System.out.println(1);
+        return userControllerFeign.retry();
+    }
 }

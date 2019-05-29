@@ -70,7 +70,7 @@ public class PayController {
 
     @GetMapping("/collapseTest")
     public void collapseTest(){
-        int requestCount = 10000000;
+        int requestCount = 100000;
         List<User> users = new ArrayList<>(requestCount);
         List<String> userIds = new ArrayList<>(requestCount);
         List<Future<User>> futures = new ArrayList<>(requestCount);
@@ -88,7 +88,9 @@ public class PayController {
 
             // 发起批量请求
             for (String userId: userIds){
-                futures.add(this.payService.getUserByCollapseAnnotation(userId));
+                // 不知道为什么使用注解形式生成的请求合并要慢很多
+                futures.add(this.payService.getUserByCollapse(userId));
+                //futures.add(this.payService.getUserByCollapseAnnotation(userId));
             }
 
             // 获取批量请求结果

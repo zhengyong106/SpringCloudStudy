@@ -25,4 +25,16 @@ public class UserControllerImpl implements UserController{
     public User getUser(@PathVariable("userId") String userId){
         return userService.getUser(userId);
     }
+
+    @Override
+    @GetMapping("/retry")
+    public String retry(){
+        System.out.println("feignRetry方法调用成功");
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "ok";
+    }
 }

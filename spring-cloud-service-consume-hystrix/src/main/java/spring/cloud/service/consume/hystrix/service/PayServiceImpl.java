@@ -168,7 +168,7 @@ public class PayServiceImpl implements PayService{
     }
 
     @Override
-    @HystrixCollapser(batchMethod = "bathMethod",collapserProperties = {@HystrixProperty(name = "timerDelayInMilliseconds",value = "100")})
+    @HystrixCollapser(batchMethod = "bathMethod",collapserProperties = {@HystrixProperty(name = "timerDelayInMilliseconds", value = "100")})
     public Future<User> getUserByCollapseAnnotation(String userId) {
         throw new RuntimeException("This method body should not be executed");
     }
