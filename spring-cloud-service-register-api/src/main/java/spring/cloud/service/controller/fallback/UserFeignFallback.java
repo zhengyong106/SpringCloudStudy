@@ -1,13 +1,14 @@
-package spring.cloud.service.consume.feign.service;
+package spring.cloud.service.register.controller.fallback;
 
 import org.springframework.stereotype.Component;
-import spring.cloud.service.consume.feign.entity.User;
+import spring.cloud.service.register.controller.UserFeign;
+import spring.cloud.service.register.entity.User;
 
 import java.util.List;
 
 // Feign客户端开启hystrix后服务降级方法
 @Component
-public class UserControllerFeignFallback implements UserControllerFeign {
+public class UserFeignFallback implements UserFeign {
     @Override
     public List<User> getUsers() {
         System.out.println("System error");

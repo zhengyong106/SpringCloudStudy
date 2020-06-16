@@ -39,6 +39,7 @@
         <module>../spring-cloud-zuul-client</module>
         <module>../spring-cloud-zuul-server</module>
         <module>../spring-cloud-service-register</module>
+        <module>../spring-cloud-service-register-api</module>
         <module>../spring-cloud-service-consume-ribbon</module>
         <module>../spring-cloud-service-consume-hystrix</module>
         <module>../spring-cloud-hystrix-dashboard</module>

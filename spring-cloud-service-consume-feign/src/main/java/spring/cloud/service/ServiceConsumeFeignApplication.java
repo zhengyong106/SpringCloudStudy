@@ -1,4 +1,4 @@
-package spring.cloud.service.consume.feign;
+package spring.cloud.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
